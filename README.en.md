@@ -4,7 +4,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness cybersecurity red-team tool (dsh-purge)</h1>
 
-<p align="center"><strong>Version 1.2.0</strong></p>
+<p align="center"><strong>Version 1.2.1</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness jailbreak: every model, swap prompts per model. Default prompt for 小码酱. Please star ⭐ If you build on this, see Attribution required.</em>
@@ -31,7 +31,7 @@
 
 > **Official Web and the official desktop app are both supported.** Official `dsh web` uses profile `web`; the official desktop EXE uses profile `desktop`. Install and Apply them separately.
 >
-> **This release (1.2.0) supports both dsh 0.2.0-rc.2 and 0.2.1-rc.2**, with `engines.dsh: >=0.2.0-rc.2 <0.3.0`. Older dsh 0.1.x builds need 1.1.39 or earlier. Community Desktop is not maintained.
+> **This release (1.2.1) supports both dsh 0.2.0-rc.2 and 0.2.1-rc.2**, with `engines.dsh: >=0.2.0-rc.2 <0.3.0`. Older dsh 0.1.x builds need 1.1.39 or earlier. Community Desktop is not maintained.
 >
 > Adding the plugin to a profile does not patch the host. Click **dsh-purge** beside the session title → **Clean** → **Apply**. A successful Apply restarts; an unfinished Apply does not. After the restart, start a new chat — that is when the inject enters the session.
 >
@@ -43,7 +43,7 @@
 - [Attribution required](#attribution-required)
 - [Strict legal and compliance disclaimer](#legal)
 - [Supported hosts](#supported-hosts)
-- [What changed in 1.2.0](#what-changed)
+- [What changed in 1.2.1](#what-changed)
 - [Install](#install)
 - [Preview](#preview)
 - [Layout](#layout)
@@ -139,9 +139,9 @@ Unmatched patches stay pending or skipped; nothing is rewritten blindly. On desk
 
 <a id="what-changed"></a>
 
-## What changed in 1.2.0
+## What changed in 1.2.1
 
-1.2.0 adds no features. It re-calibrates the previous patch table against dsh 0.2.1-rc.2. Item by item:
+1.2.1 adds no features. It carries the 1.2.0 re-calibration of the patch table against dsh 0.2.1-rc.2, plus one fix that a real install surfaced. Item by item:
 
 - **The `{{cwd}}` crash is fixed.** dsh 0.2.1 removed the `{{cwd}}` prompt variable; the directory now arrives as the `working-directory:current` context from the `dsh-working-directory` package (`interpolate: false`). The old value written into a profile, `personaSuffix: Your working directory is {{cwd}}.`, makes the host throw `unknown prompt variable` on startup. This release blanks that line and adds a repair path: before every Apply it scans `$DSH_HOME/cordis.patch.yml` and `$DSH_HOME/profiles/*/cordis.patch.yml` and collapses leftover directory sentences to an empty value. It is idempotent — no hit, no write.
 - **The Web surface prompt moved.** dsh 0.2.1 moved the GUI identity line and the `harness:source` section into a new package, `dsh-harness-dev-context`. The matching patches now target the new package, and a new patch `HARNESS_SOURCE_NEUTRAL` (#93) neutralises the "you may inspect / extend DSH itself" capability hint into a plain reference directory.
@@ -180,7 +180,7 @@ The [hub](https://dsh-plugin.org/plugins/axing-hb/dsh-purge) button may still re
 For the desktop client you can also click the button (`dsh://` deep link):
 
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.2.0&repo=Axing-hb%2Fdsh-purge&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fgithub.com%2FAxing-hb%2Fdsh-purge%2Farchive%2Frefs%2Fheads%2Fmaster.tar.gz"><strong>Install in desktop client</strong></a>
+  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.2.1&repo=Axing-hb%2Fdsh-purge&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fgithub.com%2FAxing-hb%2Fdsh-purge%2Farchive%2Frefs%2Fheads%2Fmaster.tar.gz"><strong>Install in desktop client</strong></a>
 </p>
 
 ### After the command: three steps
@@ -409,7 +409,7 @@ After a successful Apply, the host restarts so patched packages load; you can al
 
 The composer **Undo once** and **Undo last round** follow official DSH `session.fork({ atSeq })`: the withdrawn turn is cut off, a new session keeps the earlier context, the old session is archived, and the line returns to the input so **send again** re-injects. `/rewind` does the same.
 
-If the **same task works in standard but fails in minimal or PTC**, preset `run_code`, sandbox, or plan intercept text is often still uncleared, or built-in minimal is missing `agent-instructions`. Use **1.2.0**, then **quit the host fully → Apply in Clean → restart → start a new chat**. Switching preset alone does not reload patches in the running process.
+If the **same task works in standard but fails in minimal or PTC**, preset `run_code`, sandbox, or plan intercept text is often still uncleared, or built-in minimal is missing `agent-instructions`. use **1.2.1**, then **quit the host fully → Apply in Clean → restart → start a new chat**. Switching preset alone does not reload patches in the running process.
 
 ### Response speed
 

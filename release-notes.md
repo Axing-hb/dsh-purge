@@ -1,3 +1,36 @@
+# 1.2.1
+
+## 中文
+
+- 版本 **1.2.1**。修 1.2.0 在真机上暴露的一个补丁 bug。
+- **#53 漏了 `whose`，系统提示词被打成半句话**：0.2.1 上 `WEB_SURFACE_PROMPT` 被打成
+  `Local web GUI: URL the runtime context names.` —— 丢了连接词、冒号后不成句，
+  而这句是真进系统提示词的，模型每轮都读到。根因是正则把 `whose` 写在捕获组外面，
+  `$1` 为空时 `$2` 只剩后半句。已把 `whose` 挪进捕获组并去掉多余冒号。
+  两代产物：0.2.0 → `Local web GUI ${webUrl}.`；0.2.1 → `Local web GUI whose URL the runtime context names.`
+- 同一次真机检查确认另外三件事是好的：`{{cwd}}` 在整棵宿主树上 0 残留
+  （0.2.1 启动崩溃点已堵死）；`#32`/`#53` 只改 `WEB_SURFACE_PROMPT`，
+  `LEGACY_WEB_SURFACE` 冻结副本一字未动；`#93` 中性化正常。
+- 真机状态：dsh 0.2.1-rc.2 桌面端，87 条补丁 **applied 70 / na 15 / skipped 2**
+  （跳过的 `#80` `#50` 是官方已无该目标）。
+
+## English
+
+- **1.2.1**. Fixes one patch bug that 1.2.0 exposed on a real install.
+- **#53 dropped `whose`, producing half a sentence in the system prompt**: on 0.2.1,
+  `WEB_SURFACE_PROMPT` became `Local web GUI: URL the runtime context names.` —
+  the connective was gone and the clause after the colon did not parse, and that string
+  really does reach the system prompt every turn. The regex had `whose` outside the
+  capture group, so with `$1` empty `$2` held only the tail. `whose` now sits inside
+  the group and the stray colon is gone. Per generation: 0.2.0 → `Local web GUI ${webUrl}.`;
+  0.2.1 → `Local web GUI whose URL the runtime context names.`
+- The same real-install check confirmed three other things are sound: `{{cwd}}` has
+  zero residue across the host tree (the 0.2.1 boot-crash point is sealed); `#32`/`#53`
+  touched only `WEB_SURFACE_PROMPT` and left the frozen `LEGACY_WEB_SURFACE` copy alone;
+  `#93` neutralizes as intended.
+- Real install (dsh 0.2.1-rc.2 desktop): **applied 70 / na 15 / skipped 2** of 87 patches
+  (the two skips, `#80` and `#50`, are official targets that no longer exist).
+
 # 1.2.0
 
 ## 中文

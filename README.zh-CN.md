@@ -4,7 +4,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness 网络安全红队工具（dsh-purge）</h1>
 
-<p align="center"><strong>Version 1.2.0</strong></p>
+<p align="center"><strong>Version 1.2.1</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness 破甲：让所有模型都能破甲，不同模型可换不同提示词；默认提示词面向国模「小码酱」。Jailbreak for every model — swap prompts per model. 求 Star 收藏 ⭐ 如要二开，请查看署名要求部分</em>
@@ -31,7 +31,7 @@
 
 > **官方 Web 和官方桌面端都支持。** 官方 `dsh web` 用 profile `web`；官方桌面 EXE 用 profile `desktop`。两边分开安装、分开点「应用」。
 >
-> **本版（1.2.0）适配 dsh 0.2.0-rc.2 与 0.2.1-rc.2 双版本**，`engines.dsh: >=0.2.0-rc.2 <0.3.0`。更早的 dsh 0.1.x 用 1.1.39 及更早的版本。社区桌面端不维护。
+> **本版（1.2.1）适配 dsh 0.2.0-rc.2 与 0.2.1-rc.2 双版本**，`engines.dsh: >=0.2.0-rc.2 <0.3.0`。更早的 dsh 0.1.x 用 1.1.39 及更早的版本。社区桌面端不维护。
 >
 > 写进 profile 还不会改宿主。点会话标题旁的 **dsh-purge** → **清洗** → **应用**。成功会自动重启；补丁没打完不重启。重启后新开一轮对话，注入才进当前会话。
 >
@@ -43,7 +43,7 @@
 - [署名要求](#署名要求)
 - [法律免责与合规使用声明](#legal)
 - [适配范围](#适配范围)
-- [本版变更（1.2.0）](#本版变更)
+- [本版变更（1.2.1）](#本版变更)
 - [安装](#安装)
 - [界面预览](#界面预览)
 - [目录结构](#目录结构)
@@ -139,9 +139,9 @@ Harness 不只是把问题交给模型。它还会在运行时改提示词、审
 
 <a id="本版变更"></a>
 
-## 本版变更（1.2.0）
+## 本版变更（1.2.1）
 
-1.2.0 不加功能，是把上一版的补丁表按 dsh 0.2.1-rc.2 重新校准。逐条说清楚：
+1.2.1 不加功能，是把上一版的补丁表按 dsh 0.2.1-rc.2 重新校准。逐条说清楚：
 
 - **修掉 `{{cwd}}` 崩溃。** dsh 0.2.1 删除了 `{{cwd}}` 提示词变量，目录改由 `dsh-working-directory` 包以 `working-directory:current`（`interpolate: false`）上下文提供。旧版写进 profile 的 `personaSuffix: Your working directory is {{cwd}}.` 会让宿主启动即抛 `unknown prompt variable`。本版把这一句清空，并新增自动修复通道：每次「应用」前扫 `$DSH_HOME/cordis.patch.yml` 与 `$DSH_HOME/profiles/*/cordis.patch.yml`，把残留的目录句收敛成空值。幂等，没有命中就不写盘。
 - **Web 面提示词搬家。** dsh 0.2.1 把 GUI 身份句和 `harness:source` 段搬进新包 `dsh-harness-dev-context`。对应补丁跟着改打新包，并新增一条 `HARNESS_SOURCE_NEUTRAL`（#93），把「可以 inspect / extend DSH 本身」这个能力暗示中性化成「普通参考目录」。
@@ -180,7 +180,7 @@ dsh plugin --profile desktop add https://github.com/Axing-hb/dsh-purge/archive/r
 桌面客户端也可以点按钮（`dsh://` 唤起）：
 
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.2.0&repo=Axing-hb%2Fdsh-purge&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fgithub.com%2FAxing-hb%2Fdsh-purge%2Farchive%2Frefs%2Fheads%2Fmaster.tar.gz"><strong>唤起客户端一键安装</strong></a>
+  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.2.1&repo=Axing-hb%2Fdsh-purge&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fgithub.com%2FAxing-hb%2Fdsh-purge%2Farchive%2Frefs%2Fheads%2Fmaster.tar.gz"><strong>唤起客户端一键安装</strong></a>
 </p>
 
 ### 装完都要做这三步
@@ -411,7 +411,7 @@ purge_status   purge_apply   purge_revert
 
 输入框旁的「回退一次」和「回退上一轮」跟官方 DSH `session.fork({ atSeq })`：撤回已进行的那一轮，新会话接上之前的上下文，旧会话归档，那句回到输入框，再发送会重新注入。聊天里 `/rewind` 同样可用。
 
-**极简 / PTC 与标准不一致时**：同一任务在标准模式能跑、在极简或 PTC 被拦，通常是 preset 里 `run_code` 或 plan 拦截句没洗净，或内置 minimal 缺少 `agent-instructions`。请用 **1.2.0**，**完全退出宿主 → 清洗里应用 → 自动重启 → 新开一轮对话** 再试；只换 preset 不重应用，旧进程里的补丁不会更新。
+**极简 / PTC 与标准不一致时**：同一任务在标准模式能跑、在极简或 PTC 被拦，通常是 preset 里 `run_code` 或 plan 拦截句没洗净，或内置 minimal 缺少 `agent-instructions`。请用 **1.2.1**，**完全退出宿主 → 清洗里应用 → 自动重启 → 新开一轮对话** 再试；只换 preset 不重应用，旧进程里的补丁不会更新。
 
 ### 响应速度
 
