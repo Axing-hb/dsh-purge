@@ -1,3 +1,29 @@
+# 1.2.0
+
+## 中文
+
+- 版本 **1.2.0**。适配 dsh **0.2.1-rc.2**，同时保持 0.2.0-rc.2 可用（`engines.dsh: >=0.2.0-rc.2 <0.3.0`）。
+- **修掉 0.2.1 起不来的坑**：dsh 0.2.1 删除了 `{{cwd}}` 提示词变量，旧版写进 profile 的 `personaSuffix: Your working directory is {{cwd}}.` 会让 assemble 直接抛 `unknown prompt variable`。本版清空该句，并新增自动修复通道：每次「应用」前扫 `$DSH_HOME/cordis.patch.yml` 与 `$DSH_HOME/profiles/*/cordis.patch.yml`，把残留目录句收敛成空值（幂等，注释行不动）。
+- **Web 面提示词搬家**：0.2.1 把 GUI 身份句和 `harness:source` 段从 `dsh-web-app` 搬进新包 `dsh-harness-dev-context`。对应补丁跟着改打新包，并新增 **#93 `HARNESS_SOURCE_NEUTRAL`**，把「可以 inspect / extend DSH 本身」这个能力暗示中性化成普通参考目录。
+- **运行时 invariant 被删**：0.2.1 移除了 `dsh-invariants` 与所有 `<pkg>/invariant` 子路径，三条审批补丁的目标文件随之消失，已收敛到现存目标。
+- **修掉 2 个存量 bug（#62）**：0.2.1 新增的「无 agent 时 deny」分支从未被中性化；`lib/types/index.js` 的 `case 'unavailable'` 旧锚点写成两行、实际在同一行，因此从未命中。修完后 `unavailable` 放行，`rejected` / `cancelled` 仍然拒绝。
+- **子代理改 managed activation**：0.2.1 删除了 `backgroundMode` / `enableRunInBackground`，对应补丁跟着调整。
+- **插件元数据新规则**：0.2.1 的 `engines.dsh` 是独占判定（必须 semver range），已补 `engines.dsh`；`dsh.client.inject` 去掉了并不存在的 `dsh-client-runtime`。
+- **新增锚点体检**：`scripts/fetch-corpus.mjs` 拉官方 npm 包做语料，`scripts/verify-anchors.mjs` 对每条补丁的 pattern 做命中 + 幂等体检，`npm run verify:anchors`。CI 发版前会跑一遍。
+- 补丁总数 **87 条**（86 条重锚 / 新增 1 条）。双版本实测：0.2.1 打中 73 条、0.2.0 打中 72 条，跳过 2 条均为「官方已无该目标」，非失锚。
+
+## English
+
+- **1.2.0**. Targets dsh **0.2.1-rc.2** while keeping 0.2.0-rc.2 working (`engines.dsh: >=0.2.0-rc.2 <0.3.0`).
+- **Fix the 0.2.1 boot failure**: dsh 0.2.1 removed the `{{cwd}}` prompt variable. The `personaSuffix: Your working directory is {{cwd}}.` that earlier versions wrote into a profile makes assemble throw `unknown prompt variable`. This release clears that sentence and adds a repair pass: before every Apply, `$DSH_HOME/cordis.patch.yml` and `$DSH_HOME/profiles/*/cordis.patch.yml` are scanned and any residual directory sentence is collapsed to an empty value (idempotent; comment lines untouched).
+- **Web-surface prompt moved**: 0.2.1 moved the GUI identity sentence and the `harness:source` section from `dsh-web-app` into the new `dsh-harness-dev-context` package. The patches follow the move, plus a new **#93 `HARNESS_SOURCE_NEUTRAL`** that neutralizes the "you may inspect or extend DSH itself" capability hint into a plain reference directory.
+- **Runtime invariants removed**: 0.2.1 dropped `dsh-invariants` and every `<pkg>/invariant` subpath. Three approval patches lost their targets and were collapsed onto the surviving files.
+- **Two latent bugs fixed in #62**: the `agent-less deny` branch that 0.2.1 introduced was never neutralized, and the `case 'unavailable'` anchor in `lib/types/index.js` was written across two lines while the source has it on one, so it never matched. After the fix `unavailable` allows, while `rejected` / `cancelled` still deny.
+- **Subagents moved to managed activations**: 0.2.1 removed `backgroundMode` / `enableRunInBackground`; the patches follow.
+- **New plugin-metadata rule**: 0.2.1 makes `engines.dsh` authoritative (a semver range is required), so the manifest now declares it; `dsh.client.inject` no longer lists the nonexistent `dsh-client-runtime`.
+- **Anchor health check**: `scripts/fetch-corpus.mjs` pulls official npm packages as a corpus, `scripts/verify-anchors.mjs` checks every patch pattern for a hit and for idempotence, wired as `npm run verify:anchors` and run in release CI.
+- **87 patches** (86 re-anchored plus 1 new). Measured on both versions: 73 apply on 0.2.1 and 72 on 0.2.0; the 2 skips are official targets that no longer exist, not lost anchors.
+
 # 1.1.71
 
 ## 中文

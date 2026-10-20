@@ -28,7 +28,9 @@
   config:
     includeHarnessIdentity: false
     personaPrefix: ""
-    personaSuffix: Your working directory is {{cwd}}.
+    # dsh 0.2.1 删掉了 {{cwd}} 变量，写目录句会让 assemble 直接抛
+    # unknown prompt variable。目录由 dsh-working-directory 供应。
+    personaSuffix: ""
 
 - id: dsh-purge
   inject: [systemPrompt, tools]

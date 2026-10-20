@@ -35,3 +35,6 @@ default-prompt-inject.md
 /official-harness-payload.7z
 *.asar
 *.asar.bak
+
+# 锚点体检语料（scripts/fetch-corpus.mjs 下的），不进仓库
+/.anchor-corpus/
