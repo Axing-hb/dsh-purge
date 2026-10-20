@@ -77,14 +77,47 @@ const PACKAGES = [
   "dsh-tool-present",
 ];
 
-/** pi-ai 是补丁 #47/#49/#57/#90/#91 的目标，不在 @deepseek-ai 命名空间下。 */
-const EXTRA = [["@earendil-works/pi-ai", "pi-ai"]];
+/**
+ * pi-ai 是补丁 #47/#49/#57/#90/#91 的目标，不在 @deepseek-ai 命名空间下，
+ * 也不跟 dsh 版本走（它自己发 0.x / 1.x）。每个 dsh 版本用它当时钉的版本。
+ */
+const PI_AI_BY_DSH = {
+  "0.2.0-rc.2": "0.87.1",
+  "0.2.1-rc.2": "1.1.0",
+};
+
+/**
+ * 某些包是后来版本才有的，旧版本上不存在是正常的，不算失败。
+ * 键 = 包名，值 = 它最早出现的 dsh 版本（含）。
+ */
+const INTRODUCED_IN = {
+  "dsh-harness-dev-context": "0.2.1-rc.2",
+  "dsh-working-directory": "0.2.1-rc.2",
+  "dsh-tool-working-directory": "0.2.1-rc.2",
+  "dsh-api-remote-access": "0.2.1-rc.2",
+  "dsh-web-deepseek-api": "0.2.1-rc.2",
+};
+
+/**
+ * 粗比版本号，够用（只比 major.minor，预发布标签按"同号即够"处理）。
+ * 例：0.2.0-rc.2 vs 0.2.1-rc.2 → false；0.2.1-rc.2 vs 0.2.1-rc.2 → true。
+ */
+function versionAtLeast(v, min) {
+  const num = (s) => String(s).split("-")[0].split(".").map(Number);
+  const a = num(v);
+  const b = num(min);
+  const [a1, a2, a3 = 0] = a;
+  const [b1, b2, b3 = 0] = b;
+  if (a1 !== b1) return a1 > b1;
+  if (a2 !== b2) return a2 > b2;
+  return a3 >= b3;
+}
 
 if (args.includes("--list")) {
   console.log("versions:", VERSIONS.join(", "));
-  console.log("packages:", PACKAGES.length, "plus", EXTRA.length, "extra");
+  console.log("packages:", PACKAGES.length, "@deepseek-ai/*, plus @earendil-works/pi-ai per version");
   for (const p of PACKAGES) console.log("  @deepseek-ai/" + p);
-  for (const [n] of EXTRA) console.log("  " + n);
+  for (const [dsh, pi] of Object.entries(PI_AI_BY_DSH)) console.log(`  @earendil-works/pi-ai@${pi}  (for dsh ${dsh})`);
   process.exit(0);
 }
 
@@ -102,6 +135,23 @@ function run(cmd, cmdArgs, cwd) {
   });
 }
 
+/**
+ * Windows 上 npm 只有 npm.cmd，execFileSync 直接调 "npm" 会 ENOENT，
+ * 而调 "npm.cmd" 在无 shell 时又可能被拒。所以优先用 node 跑 npm-cli.js
+ * （跟 lib/core.js 的 npmQuery 同一个办法），退路才用 shell。
+ */
+function npmCommand() {
+  const npmCli = path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js");
+  if (fs.existsSync(npmCli)) return [process.execPath, [npmCli]];
+  return ["npm", []];
+}
+
+function npmPack(spec, cwd) {
+  const [cmd, pre] = npmCommand();
+  const out = run(cmd, [...pre, "pack", spec, "--silent"], cwd);
+  return out.trim().split(/\r?\n/).pop();
+}
+
 function unpack(tgz, dest) {
   fs.mkdirSync(dest, { recursive: true });
   run("tar", ["-xzf", tgz, "-C", dest]);
@@ -111,6 +161,7 @@ function unpack(tgz, dest) {
 let fetched = 0;
 let reused = 0;
 const failed = [];
+const skipped = [];
 
 for (const version of versions) {
   const outDir = path.join(corpusRoot, version);
@@ -118,18 +169,29 @@ for (const version of versions) {
   fs.mkdirSync(outDir, { recursive: true });
   fs.mkdirSync(workDir, { recursive: true });
 
-  for (const [spec, folder] of [...PACKAGES.map((p) => [`@deepseek-ai/${p}`, p]), ...EXTRA]) {
+  // dsh 自己的包跟 dsh 版本号走；pi-ai 是独立版本线，按表查。
+  const plan = PACKAGES.map((p) => [`@deepseek-ai/${p}`, p, version]);
+  const piVersion = PI_AI_BY_DSH[version];
+  if (piVersion !== undefined) plan.push(["@earendil-works/pi-ai", "pi-ai", piVersion]);
+
+  for (const [spec, folder, specVersion] of plan) {
     const target = path.join(outDir, folder);
     if (fs.existsSync(path.join(target, "lib")) || fs.existsSync(path.join(target, "dist"))) {
       reused += 1;
       continue;
     }
+    // 这个包在该版本还没发布，跳过而不是算失败。
+    const since = INTRODUCED_IN[folder];
+    if (since !== undefined && !versionAtLeast(version, since)) {
+      skipped.push(`${spec} (未在 ${version} 发布，最早 ${since})`);
+      continue;
+    }
     if (offline) {
-      failed.push(`${spec}@${version} (offline)`);
+      failed.push(`${spec}@${specVersion} (offline)`);
       continue;
     }
     try {
-      const name = run("npm", ["pack", `${spec}@${version}`, "--silent"], workDir).trim().split(/\r?\n/).pop();
+      const name = npmPack(`${spec}@${specVersion}`, workDir);
       const tgz = path.join(workDir, name);
       const pkgDir = unpack(tgz, path.join(workDir, folder));
       fs.rmSync(target, { recursive: true, force: true });
@@ -146,7 +208,8 @@ for (const version of versions) {
 
 fs.rmSync(path.join(corpusRoot, ".work"), { recursive: true, force: true });
 
-console.log(`fetch-corpus: fetched=${fetched} reused=${reused} failed=${failed.length}`);
+console.log(`fetch-corpus: fetched=${fetched} reused=${reused} skipped=${skipped.length} failed=${failed.length}`);
+for (const s of skipped) console.log("  SKIP " + s);
 for (const f of failed) console.log("  FAILED " + f);
 console.log(`corpus at ${corpusRoot}`);
 if (failed.length > 0) process.exit(1);
